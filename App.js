@@ -9,6 +9,7 @@ import { auth } from "./src/firebaseConfig";
 import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
+import HomePetScreen from "./src/screens/HomePetScreen";
 
 export default function App() {
   //////////////////////// FUNCTIONS ////////////////////////
@@ -22,7 +23,7 @@ export default function App() {
     return (
       <ProtectedStack.Navigator>
         <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
-        {/* you can add more private screens here (e.g., Profile, Settings) */}
+        <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
       </ProtectedStack.Navigator>
     );
   }
