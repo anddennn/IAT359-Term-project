@@ -28,7 +28,7 @@ export default function App() {
 
       <ProtectedStack.Navigator>
         <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
-        {/* you can add more private screens here (e.g., Profile, Settings) */}
+        <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
       </ProtectedStack.Navigator>
     );
   }
