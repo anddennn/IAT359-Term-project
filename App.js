@@ -21,15 +21,15 @@ export default function App() {
   //think of a better name than protected screen bc this was just from lecture
   function ProtectedLayout() {
     return (
-      <ProtectedStack.Navigator>
-        <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
-        {/* testing for this branch, original commented below*/}
-      </ProtectedStack.Navigator>
-
       // <ProtectedStack.Navigator>
-      //   <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
-      //   {/* you can add more private screens here (e.g., Profile, Settings) */}
+      //   <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
+      //   {/* testing for this branch, original commented below*/}
       // </ProtectedStack.Navigator>
+
+      <ProtectedStack.Navigator>
+        <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
+        {/* you can add more private screens here (e.g., Profile, Settings) */}
+      </ProtectedStack.Navigator>
     );
   }
 
