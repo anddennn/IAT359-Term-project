@@ -5,6 +5,8 @@ import { initializeApp } from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { getAuth } from "firebase/auth";
 
+import { getFirestore } from "firebase/firestore";
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBRum2tEthGDLV1IqDId6SzaEexZnFn6F4",
@@ -19,3 +21,5 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+// Initialize Cloud Firestore and get a reference to the service
+export const db = getFirestore(app); // Exported db to use in other screens
