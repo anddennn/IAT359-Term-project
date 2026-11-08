@@ -1,43 +1,53 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, FlatList, StyleSheet, Text, View } from "react-native";
-import { doc, onSnapshot, runTransaction, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp,
+} from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
 const MAX_HEALTH_SECONDS = 60;
 const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"];
 
-function createActivities() {
-  return ACTIVITY_NAMES.map((name) => ({
+// Initialize activities list
+const createActivities = () =>
+  ACTIVITY_NAMES.map((name) => ({
     key: name,
     value: name,
     completed: false,
   }));
-}
 
-function createPet() {
-  return {
-    exp: 0,
-    health: MAX_HEALTH_SECONDS,
-    activities: createActivities(),
-  };
-}
+// Initialize pet
+const createPet = () => ({
+  exp: 0,
+  health: MAX_HEALTH_SECONDS,
+  activities: createActivities(),
+});
 
 export default function SharedPetView({ showPartnerId = false }) {
+  // User stuff
   const userId = auth.currentUser?.uid;
   const [account, setAccount] = useState(null);
   const [accountLoading, setAccountLoading] = useState(true);
   const [accountError, setAccountError] = useState(false);
+
+  // Pet stuff
   const [petSnapshot, setPetSnapshot] = useState(null);
   const [petError, setPetError] = useState(false);
+
+  // For timer
   const [now, setNow] = useState(0);
 
+  // Account listener to handle loading and errors
   useEffect(() => {
     if (!userId) {
       return;
     }
 
     return onSnapshot(
-      doc(db, "users", userId),
+      doc(db, "users", userId), // Basically if the user exists or if the pairing exists
       (userSnapshot) => {
         setAccount(userSnapshot.exists() ? userSnapshot.data() : null);
         setAccountLoading(false);
@@ -54,13 +64,12 @@ export default function SharedPetView({ showPartnerId = false }) {
   const pairingId = account?.pairingId ?? null;
 
   useEffect(() => {
-    if (!pairingId) {
-      return;
-    }
+    if (!pairingId) return;
 
     const pairingRef = doc(db, "pairings", pairingId);
     let initializing = false;
 
+    // Checks the current snapshot of the pet to either get dta of an existing pet or create a new one
     return onSnapshot(
       pairingRef,
       (pairingSnapshot) => {
@@ -80,10 +89,9 @@ export default function SharedPetView({ showPartnerId = false }) {
           return;
         }
 
-        if (initializing) {
-          return;
-        }
+        if (initializing) return;
 
+        // Initialization to create a pet or update a pet based off of data
         initializing = true;
         runTransaction(db, async (transaction) => {
           const currentPairing = await transaction.get(pairingRef);
@@ -107,7 +115,7 @@ export default function SharedPetView({ showPartnerId = false }) {
   }, [pairingId]);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    const timer = setInterval(() => setNow(Date.now()), 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -125,9 +133,7 @@ export default function SharedPetView({ showPartnerId = false }) {
 
       const pairingData = pairingSnapshot.data();
       const lastUpdated = pairingData.petUpdatedAt?.toMillis?.() ?? now;
-      const elapsedSeconds = Math.floor(
-        Math.max(now - lastUpdated, 0) / 1000,
-      );
+      const elapsedSeconds = Math.floor(Math.max(now - lastUpdated, 0) / 1000);
       const currentPet = {
         ...pairingData.pet,
         health: Math.max(pairingData.pet.health - elapsedSeconds, 0),
@@ -147,6 +153,10 @@ export default function SharedPetView({ showPartnerId = false }) {
     console.error("Error updating shared pet:", error);
     Alert.alert("Unable to update pet", error.message);
   };
+
+  // Activity functions:
+  // handleRefreshActivities resets the task list
+  // handleCompleteActivities marks activities as completed
 
   const handleRefreshActivities = () => {
     updatePet((pet) => ({ ...pet, activities: createActivities() })).catch(
@@ -174,30 +184,42 @@ export default function SharedPetView({ showPartnerId = false }) {
 
   const displayId = showPartnerId ? account?.pairedWith : userId;
   const title = displayId ?? (showPartnerId ? "Partner ID" : "User ID");
+
   const hasCurrentPet = petSnapshot?.pairingId === pairingId;
+
   const pet = hasCurrentPet ? petSnapshot.pet : null;
+
   const lastUpdated = petSnapshot?.updatedAt?.toMillis?.() ?? now;
-  const elapsedSeconds = Math.floor(Math.max(now - lastUpdated, 0) / 1000);
-  const health = Math.max((pet?.health ?? MAX_HEALTH_SECONDS) - elapsedSeconds, 0);
-  const expBarWidth = `${Math.min(Math.max((pet?.exp ?? 0) / 100, 0), 1) * 100}%`;
-  const healthBarWidth = `${(health / MAX_HEALTH_SECONDS) * 100}%`;
+
+  // Timer math
+  const elapsedSeconds = Math.floor(Math.max(now - lastUpdated, 0) / 1000); // by millisecond
+  const health = Math.max(
+    (pet?.health ?? MAX_HEALTH_SECONDS) - elapsedSeconds,
+    0,
+  ); // decreases by the second
+  const expBarWidth = `${Math.min(Math.max((pet?.exp ?? 0) / 100, 0), 1) * 100}%`; // percentage value for exp
+  const healthBarWidth = `${(health / MAX_HEALTH_SECONDS) * 100}%`; // percentage value for health
+
   const incompleteActivities =
     pet?.activities.filter((activity) => !activity.completed) ?? [];
 
-  let message = null;
-  if (!userId) {
-    message = "User is unavailable.";
-  } else if (accountLoading) {
-    message = "Loading pairing...";
-  } else if (accountError) {
-    message = "Unable to load pairing.";
-  } else if (!pairingId) {
-    message = "Pair with another user to share a pet.";
-  } else if (petError) {
-    message = "Unable to load the shared pet.";
-  } else if (!pet) {
-    message = "Loading shared pet...";
-  }
+  //Loading and error messages///////////////////////
+  const message = !userId
+    ? "User is unavailable."
+    : accountLoading
+      ? "Loading pairing..."
+      : accountError
+        ? "Unable to load pairing."
+        : !pairingId
+          ? "Pair with another user to share a pet."
+          : petError
+            ? "Unable to load the shared pet."
+            : !pet
+              ? "Loading shared pet..."
+              : null;
+  ////////////////////////////////////////////////////////
+
+  ////////////////////////// RENDERING VIEW ///////////////////////
 
   return (
     <View style={styles.container}>
@@ -210,7 +232,9 @@ export default function SharedPetView({ showPartnerId = false }) {
             <Text>Exp</Text>
             <View style={styles.progressBar}>
               <View style={styles.progressBarTrack}>
-                <View style={[styles.progressBarFill, { width: expBarWidth }]} />
+                <View
+                  style={[styles.progressBarFill, { width: expBarWidth }]}
+                />
               </View>
             </View>
           </View>
@@ -229,8 +253,7 @@ export default function SharedPetView({ showPartnerId = false }) {
           <View
             style={[
               styles.placeholderHappy,
-              health < MAX_HEALTH_SECONDS * 0.67 &&
-                styles.placeholderNeutral,
+              health < MAX_HEALTH_SECONDS * 0.67 && styles.placeholderNeutral,
               health < MAX_HEALTH_SECONDS * 0.33 && styles.placeholderSad,
             ]}
           />
@@ -259,6 +282,8 @@ export default function SharedPetView({ showPartnerId = false }) {
     </View>
   );
 }
+
+/////////////////////// STYLES //////////////////////////////////////
 
 const styles = StyleSheet.create({
   barContainer: {
