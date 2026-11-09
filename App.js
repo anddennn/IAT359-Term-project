@@ -11,7 +11,6 @@ import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
 import HomePetScreen from "./src/screens/HomePetScreen";
 import CameraTaskScreen from "./src/screens/CameraTaskScreen";
-import { CameraTaskCompletionProvider } from "./src/components/CameraTaskCompletionContext";
 
 export default function App() {
   //////////////////////// FUNCTIONS ////////////////////////
@@ -23,23 +22,20 @@ export default function App() {
   //think of a better name than protected screen bc this was just from lecture
   function ProtectedLayout() {
     return (
-      <CameraTaskCompletionProvider>
-        <ProtectedStack.Navigator>
-          <ProtectedStack.Screen
-            name="PairingScreen"
-            component={PairingScreen}
-          />
-          <ProtectedStack.Screen
-            name="HomePetScreen"
-            component={HomePetScreen}
-          />
-          <ProtectedStack.Screen
-            name="CameraTaskScreen"
-            component={CameraTaskScreen}
-            options={{ title: "Camera Task" }}
-          />
-        </ProtectedStack.Navigator>
-      </CameraTaskCompletionProvider>
+      // <ProtectedStack.Navigator>
+      //   <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
+      //   {/* testing for this branch, original commented below*/}
+      // </ProtectedStack.Navigator>
+
+      <ProtectedStack.Navigator>
+        <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
+        <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
+        <ProtectedStack.Screen
+          name="CameraTaskScreen"
+          component={CameraTaskScreen}
+          options={{ title: "Camera Task" }}
+        />
+      </ProtectedStack.Navigator>
     );
   }
 

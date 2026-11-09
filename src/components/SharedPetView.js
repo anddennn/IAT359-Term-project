@@ -170,7 +170,7 @@ export default function SharedPetView({ showPartnerId = false }) {
   };
 
   const handleCompleteActivity = (key) => {
-    updatePet((pet) => {
+    return updatePet((pet) => {
       const activity = pet.activities.find((item) => item.key === key);
       if (!activity || activity.completed) {
         return null;
@@ -284,14 +284,20 @@ export default function SharedPetView({ showPartnerId = false }) {
                   <View style={styles.buttonContainer}>
                     <Button
                       title="Go to task"
-                      onPress={() => navigation.navigate("CameraTaskScreen")}
+                      onPress={() =>
+                        navigation.navigate("CameraTaskScreen", {
+                          onComplete: () => handleCompleteActivity("Camera"),
+                        })
+                      }
                     />
                   </View>
                 ) : (
                   <Button
                     title="Complete"
                     color="#0e8f66"
-                    onPress={() => handleCompleteActivity(item.key)}
+                    onPress={() =>
+                      handleCompleteActivity(item.key).catch(handleUpdateError)
+                    }
                   />
                 )}
               </View>

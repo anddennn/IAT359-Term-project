@@ -2,17 +2,34 @@ import { useState, useRef } from "react";
 import { Alert, StyleSheet, Text, View, Button, Image } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
-import { useCameraTaskCompletion } from "../components/CameraTaskCompletionContext";
 
-export default function CameraTaskScreen({ navigation }) {
+export default function CameraTaskScreen({ navigation, route }) {
+  const { onComplete } = route.params;
+
   const [permission, requestPermission] = useCameraPermissions();
-  const { completeCameraTask } = useCameraTaskCompletion();
   const [image, setImage] = useState(null);
   const [completing, setCompleting] = useState(false);
   const [camType, setCamType] = useState("back");
   const [flash, setFlash] = useState("off");
   const [cameraReady, setCameraReady] = useState(false);
   const cameraRef = useRef(null);
+
+  const handleCompleteTask = async () => {
+    if (completing) return;
+
+    setCompleting(true);
+
+    try {
+      await onComplete();
+
+      Alert.alert("Task completed!", "Your pet received EXP and health.");
+      navigation.navigate("HomePetScreen");
+    } catch (error) {
+      Alert.alert("Unable to complete task", error.message);
+    } finally {
+      setCompleting(false);
+    }
+  };
 
   const takePicture = async () => {
     if (cameraRef.current && cameraReady) {
@@ -108,7 +125,11 @@ export default function CameraTaskScreen({ navigation }) {
         {image ? (
           <View>
             <View style={styles.buttonContainer}>
-              <Button title={"Complete Task"} />
+              <Button
+                title={completing ? "Completing..." : "Complete Task"}
+                onPress={handleCompleteTask}
+                disabled={completing}
+              />
             </View>
             <View style={styles.actionButtons}>
               <View style={styles.buttonContainer}>
