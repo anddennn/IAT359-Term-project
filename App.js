@@ -10,6 +10,8 @@ import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
 import HomePetScreen from "./src/screens/HomePetScreen";
+import CameraTaskScreen from "./src/screens/CameraTaskScreen";
+import { CameraTaskCompletionProvider } from "./src/components/CameraTaskCompletionContext";
 
 export default function App() {
   //////////////////////// FUNCTIONS ////////////////////////
@@ -21,15 +23,23 @@ export default function App() {
   //think of a better name than protected screen bc this was just from lecture
   function ProtectedLayout() {
     return (
-      // <ProtectedStack.Navigator>
-      //   <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
-      //   {/* testing for this branch, original commented below*/}
-      // </ProtectedStack.Navigator>
-
-      <ProtectedStack.Navigator>
-        <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
-        <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
-      </ProtectedStack.Navigator>
+      <CameraTaskCompletionProvider>
+        <ProtectedStack.Navigator>
+          <ProtectedStack.Screen
+            name="PairingScreen"
+            component={PairingScreen}
+          />
+          <ProtectedStack.Screen
+            name="HomePetScreen"
+            component={HomePetScreen}
+          />
+          <ProtectedStack.Screen
+            name="CameraTaskScreen"
+            component={CameraTaskScreen}
+            options={{ title: "Camera Task" }}
+          />
+        </ProtectedStack.Navigator>
+      </CameraTaskCompletionProvider>
     );
   }
 
@@ -50,10 +60,17 @@ export default function App() {
   //////////////////////// SCREENS ////////////////////////
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignUp">
+      <Stack.Navigator
+        initialRouteName="SignUp"
+        screenOptions={{ headerShown: false }}
+      >
         {user ? (
           // if user is logged in, show the protected screens
-          <Stack.Screen name="Protected" component={ProtectedLayout} />
+          <Stack.Screen
+            name="Protected"
+            component={ProtectedLayout}
+            screenOptions={{ headerShown: false }}
+          />
         ) : (
           // if user is not logged in, show the auth screens
           <>
