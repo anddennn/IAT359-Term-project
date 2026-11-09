@@ -8,7 +8,6 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
-import { useNavigation } from "@react-navigation/native";
 
 const MAX_HEALTH_SECONDS = 60;
 const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"];
@@ -32,7 +31,6 @@ export default function SharedPetView({ showPartnerId = false }) {
   const navigation = useNavigation();
 
   // User stuff
-  const navigation = useNavigation();
   const userId = auth.currentUser?.uid;
   const [account, setAccount] = useState(null);
   const [accountLoading, setAccountLoading] = useState(true);
@@ -201,7 +199,7 @@ export default function SharedPetView({ showPartnerId = false }) {
         pairingId: pairingId,
         userId: userId,
         partnerId: account?.pairedWith,
-        onComplete: () => handleCompleteActivity(key) // Pass the function here!
+        onComplete: () => handleCompleteActivity(key), // Pass the function here!
       });
     } else {
       handleCompleteActivity(key);
@@ -306,6 +304,13 @@ export default function SharedPetView({ showPartnerId = false }) {
                       }
                     />
                   </View>
+                ) : item.key === "Q&A" ? (
+                  <View style={styles.buttonContainer}>
+                    <Button
+                      title="Go to task"
+                      onPress={() => handleTaskPress(item.key)}
+                    />
+                  </View>                  
                 ) : (
                   <Button
                     title="Complete"
@@ -315,11 +320,6 @@ export default function SharedPetView({ showPartnerId = false }) {
                     }
                   />
                 )}
-                <Button
-                  title="Complete"
-                  color="#0e8f66"
-                  onPress={() => handleTaskPress(item.key)}
-                />
               </View>
             )}
           />
