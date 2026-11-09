@@ -10,6 +10,7 @@ import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
 import HomePetScreen from "./src/screens/HomePetScreen";
+import CameraTaskScreen from "./src/screens/CameraTaskScreen";
 import QAScreen from './src/screens/QAScreen';
 
 export default function App() {
@@ -30,7 +31,15 @@ export default function App() {
       <ProtectedStack.Navigator>
         <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
         <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
-        <ProtectedStack.Screen name="QAScreen" component={QAScreen} options={{ title: "Partner Q&A" }} />
+        <ProtectedStack.Screen
+          name="CameraTaskScreen"
+          component={CameraTaskScreen}
+          options={{ title: "Camera Task" }}
+        />
+        <ProtectedStack.Screen 
+          name="QAScreen" 
+          component={QAScreen} 
+          options={{ title: "Partner Q&A" }} />
       </ProtectedStack.Navigator>
     );
   }
@@ -52,10 +61,17 @@ export default function App() {
   //////////////////////// SCREENS ////////////////////////
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignUp">
+      <Stack.Navigator
+        initialRouteName="SignUp"
+        screenOptions={{ headerShown: false }}
+      >
         {user ? (
           // if user is logged in, show the protected screens
-          <Stack.Screen name="Protected" component={ProtectedLayout} />
+          <Stack.Screen
+            name="Protected"
+            component={ProtectedLayout}
+            screenOptions={{ headerShown: false }}
+          />
         ) : (
           // if user is not logged in, show the auth screens
           <>

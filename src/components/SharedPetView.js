@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, FlatList, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import {
   doc,
   onSnapshot,
@@ -28,6 +29,8 @@ const createPet = () => ({
 });
 
 export default function SharedPetView({ showPartnerId = false }) {
+  const navigation = useNavigation();
+
   // User stuff
   const navigation = useNavigation();
   const userId = auth.currentUser?.uid;
@@ -127,7 +130,7 @@ export default function SharedPetView({ showPartnerId = false }) {
     }
 
     const pairingRef = doc(db, "pairings", pairingId);
-    await runTransaction(db, async (transaction) => {
+    return runTransaction(db, async (transaction) => {
       const pairingSnapshot = await transaction.get(pairingRef);
       if (!pairingSnapshot.exists() || !pairingSnapshot.data().pet) {
         throw new Error("The shared pet is not available.");
@@ -147,7 +150,9 @@ export default function SharedPetView({ showPartnerId = false }) {
           pet: nextPet,
           petUpdatedAt: serverTimestamp(),
         });
+        return true;
       }
+      return false;
     });
   };
 
@@ -167,7 +172,7 @@ export default function SharedPetView({ showPartnerId = false }) {
   };
 
   const handleCompleteActivity = (key) => {
-    updatePet((pet) => {
+    return updatePet((pet) => {
       const activity = pet.activities.find((item) => item.key === key);
       if (!activity || activity.completed) {
         return null;
@@ -181,7 +186,13 @@ export default function SharedPetView({ showPartnerId = false }) {
           item.key === key ? { ...item, completed: true } : item,
         ),
       };
-    }).catch(handleUpdateError);
+    });
+    // .then((updated) => {
+    //   if (updated && key === "Camera") {
+    //     navigation.navigate("CameraTaskScreen");
+    //   }
+    // })
+    // .catch(handleUpdateError);
   };
 
   const handleTaskPress = (key) => {
@@ -284,6 +295,26 @@ export default function SharedPetView({ showPartnerId = false }) {
             renderItem={({ item }) => (
               <View style={styles.listItem}>
                 <Text style={styles.listItemText}>{item.value}</Text>
+                {item.key === "Camera" ? (
+                  <View style={styles.buttonContainer}>
+                    <Button
+                      title="Go to task"
+                      onPress={() =>
+                        navigation.navigate("CameraTaskScreen", {
+                          onComplete: () => handleCompleteActivity("Camera"),
+                        })
+                      }
+                    />
+                  </View>
+                ) : (
+                  <Button
+                    title="Complete"
+                    color="#0e8f66"
+                    onPress={() =>
+                      handleCompleteActivity(item.key).catch(handleUpdateError)
+                    }
+                  />
+                )}
                 <Button
                   title="Complete"
                   color="#0e8f66"
