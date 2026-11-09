@@ -10,6 +10,7 @@ import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
 import HomePetScreen from "./src/screens/HomePetScreen";
+import QAScreen from './src/screens/QAScreen';
 
 export default function App() {
   //////////////////////// FUNCTIONS ////////////////////////
@@ -29,6 +30,7 @@ export default function App() {
       <ProtectedStack.Navigator>
         <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
         <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
+        <ProtectedStack.Screen name="QAScreen" component={QAScreen} options={{ title: "Partner Q&A" }} />
       </ProtectedStack.Navigator>
     );
   }

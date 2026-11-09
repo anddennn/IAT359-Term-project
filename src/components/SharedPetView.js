@@ -7,6 +7,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
 
 const MAX_HEALTH_SECONDS = 60;
 const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"];
@@ -28,6 +29,7 @@ const createPet = () => ({
 
 export default function SharedPetView({ showPartnerId = false }) {
   // User stuff
+  const navigation = useNavigation();
   const userId = auth.currentUser?.uid;
   const [account, setAccount] = useState(null);
   const [accountLoading, setAccountLoading] = useState(true);
@@ -182,6 +184,19 @@ export default function SharedPetView({ showPartnerId = false }) {
     }).catch(handleUpdateError);
   };
 
+  const handleTaskPress = (key) => {
+    if (key === "Q&A") {
+      navigation.navigate("QAScreen", {
+        pairingId: pairingId,
+        userId: userId,
+        partnerId: account?.pairedWith,
+        onComplete: () => handleCompleteActivity(key) // Pass the function here!
+      });
+    } else {
+      handleCompleteActivity(key);
+    }
+  };
+
   const displayId = showPartnerId ? account?.pairedWith : userId;
   const title = displayId ?? (showPartnerId ? "Partner ID" : "User ID");
 
@@ -272,7 +287,7 @@ export default function SharedPetView({ showPartnerId = false }) {
                 <Button
                   title="Complete"
                   color="#0e8f66"
-                  onPress={() => handleCompleteActivity(item.key)}
+                  onPress={() => handleTaskPress(item.key)}
                 />
               </View>
             )}
