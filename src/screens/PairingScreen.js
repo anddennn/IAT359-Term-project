@@ -13,6 +13,7 @@ import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import PrimaryButton from "../components/PrimaryButton";
 
 export default function PairingScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
@@ -162,19 +163,15 @@ export default function PairingScreen({ navigation }) {
             Link with your partner to share a pet!
           </Text>
 
-          <TouchableOpacity
-            style={styles.primaryButton}
+          <PrimaryButton
+            title="Generate a Pair Code"
             onPress={handleGenerateCode}
-          >
-            <Text style={styles.buttonText}>Generate a Pair Code</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
+          />
+          <PrimaryButton
+            title="I have a code"
             onPress={() => setViewMode("input")}
-          >
-            <Text style={styles.secondaryButtonText}>I have a code</Text>
-          </TouchableOpacity>
+            color="#007BFF"
+          />
         </View>
       )}
 
@@ -192,7 +189,11 @@ export default function PairingScreen({ navigation }) {
             Waiting for partner to enter code...
           </Text>
 
-          <Button title="Cancel" color="red" onPress={handleCancelGenerate} />
+          <PrimaryButton
+            title="Cancel"
+            color="#000"
+            onPress={handleCancelGenerate}
+          />
         </View>
       )}
 
@@ -210,19 +211,26 @@ export default function PairingScreen({ navigation }) {
           />
 
           <View style={styles.buttonRow}>
-            <Button
+            <PrimaryButton
               title="Cancel"
-              color="gray"
+              color="#333"
               onPress={() => setViewMode("default")}
             />
             <View style={{ width: 20 }} />
-            <Button title="Submit Code" onPress={handleInputCodeSubmit} />
+            <PrimaryButton
+              title="Submit Code"
+              onPress={handleInputCodeSubmit}
+            />
           </View>
         </View>
       )}
 
       <View style={styles.debugSection}>
-        <Button onPress={() => signOut(auth)} title="Sign Out" color="red" />
+        <PrimaryButton
+          title="Sign out"
+          color="#DC143C"
+          onPress={() => signOut(auth)}
+        />
       </View>
     </View>
   );
@@ -250,34 +258,6 @@ const styles = StyleSheet.create({
     color: "gray",
     marginBottom: 40,
     textAlign: "center",
-  },
-  primaryButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 8,
-    width: "80%",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 8,
-    width: "80%",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#007BFF",
-  },
-  secondaryButtonText: {
-    color: "#007BFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
   codeText: {
     fontSize: 48,

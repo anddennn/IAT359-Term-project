@@ -15,8 +15,8 @@ import PrimaryButton from "./PrimaryButton";
 import ProgressBar from "./ProgressBar";
 import ActivityListItem from "./ActivityListItem";
 
-const MAX_HEALTH_SECONDS = 60;
-const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"];
+const MAX_HEALTH_SECONDS = 60; // Dictates how many seconds it takes for health to go down
+const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"]; // hard coded list of activities
 
 // Initialize activities list
 const createActivities = () =>
@@ -60,7 +60,6 @@ export default function SharedPetView({
     if (!userId) {
       return;
     }
-
     return onSnapshot(
       doc(db, "users", userId), // Basically if the user exists or if the pairing exists
       (userSnapshot) => {
@@ -209,7 +208,7 @@ export default function SharedPetView({
   };
 
   const handleCompleteActivity = async (key) => {
-    const activity = pet.activities.find((item) => item.key === key);
+    const activity = activities.find((item) => item.key === key);
 
     if (!activity || activity.completed) return;
 
@@ -230,6 +229,7 @@ export default function SharedPetView({
     });
   };
 
+  // Handler for 'go to task' or 'complete buttons'
   const handleTaskPress = (key) => {
     if (key === "Q&A") {
       navigation.navigate("QAScreen", {
@@ -326,10 +326,10 @@ export default function SharedPetView({
               color="#000"
             />
           )}
-          
+
           <View style={styles.activityContainer}>
             <Text style={[{ fontWeight: "bold" }]}>Activity List:</Text>
-            
+
             <FlatList
               style={styles.list}
               data={incompleteActivities}
@@ -354,12 +354,14 @@ export default function SharedPetView({
                 );
               }}
             />
-            
           </View>
-          <PrimaryButton title="Sign out" color="#DC143C" onPress={handleLogout} />
+          <PrimaryButton
+            title="Sign out"
+            color="#DC143C"
+            onPress={handleLogout}
+          />
         </>
       )}
-      
     </View>
   );
 }

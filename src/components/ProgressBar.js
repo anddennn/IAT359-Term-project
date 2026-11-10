@@ -6,6 +6,14 @@ export default function ProgressBar({ label, value, max, color = "#3b5998" }) {
       ? Math.min(Math.max(value / max, 0), 1)
       : 0;
 
+  // EXAMPLE:
+  // value = 5
+  // max = 10
+
+  // min(max((5/10), 0), 1
+  // min(0.5, 1)
+  // progress = 0.5
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
