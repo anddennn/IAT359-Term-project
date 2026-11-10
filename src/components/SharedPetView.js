@@ -326,9 +326,10 @@ export default function SharedPetView({
               color="#000"
             />
           )}
-
+          
           <View style={styles.activityContainer}>
             <Text style={[{ fontWeight: "bold" }]}>Activity List:</Text>
+            
             <FlatList
               style={styles.list}
               data={incompleteActivities}
@@ -353,10 +354,12 @@ export default function SharedPetView({
                 );
               }}
             />
+            
           </View>
+          <PrimaryButton title="Sign out" color="#DC143C" onPress={handleLogout} />
         </>
       )}
-      <PrimaryButton title="Sign out" color="Red" onPress={handleLogout} />
+      
     </View>
   );
 }
@@ -391,6 +394,7 @@ const styles = StyleSheet.create({
   // ----------------------------------------
 
   activityContainer: {
+    flex: 1,
     width: "100%",
     flexDirection: "column",
     gap: 4,
@@ -398,7 +402,8 @@ const styles = StyleSheet.create({
   },
 
   list: {
-    maxHeight: "auto",
+    flex: 1,
+    //maxHeight: "80%",
     width: "100%",
   },
   header: {
