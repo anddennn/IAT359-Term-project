@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import BackButton from "../components/BackButton";
+import InputText from "../components/InputText";
+import PrimaryButton from "../components/PrimaryButton";
 
-// A temporary list of questions. 
+// A temporary list of questions.
 const QUESTIONS = [
   "What is your partner's go-to comfort movie?",
   "What is your partner's favorite meal?",
@@ -13,6 +16,13 @@ const QUESTIONS = [
 
 export default function QAScreen({ route, navigation }) {
   const { pairingId, userId, partnerId, onComplete } = route.params;
+  const returnToPet = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("HomePetScreen");
+    }
+  };
 
   const [pairingData, setPairingData] = useState(null);
   const [myAnswerInput, setMyAnswerInput] = useState("");
@@ -22,18 +32,19 @@ export default function QAScreen({ route, navigation }) {
   //both users see the same question and answers at the same time.
   useEffect(() => {
     const pairingRef = doc(db, "pairings", pairingId);
-    
+
     const unsubscribe = onSnapshot(pairingRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
 
         // If there isn't a question chosen yet, picks a random one and saves it to the database
         if (!data.qaSession) {
-          const randomQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+          const randomQ =
+            QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
           await updateDoc(pairingRef, {
             qaSession: {
               question: randomQ,
-              answers: {}, 
+              answers: {},
             },
           });
         } else {
@@ -49,6 +60,7 @@ export default function QAScreen({ route, navigation }) {
   if (loading || !pairingData?.qaSession) {
     return (
       <View style={styles.centerContainer}>
+        <BackButton title="Back to pet" onPress={returnToPet} />
         <ActivityIndicator size="large" color="#0e8f66" />
       </View>
     );
@@ -63,10 +75,10 @@ export default function QAScreen({ route, navigation }) {
   const partnerHasAnswered = !!partnerAnswer;
   const bothAnswered = hasAnswered && partnerHasAnswered;
 
-  // Save the user's typed answer to the database. 
+  // Save the user's typed answer to the database.
   const handleSubmitAnswer = async () => {
     if (!myAnswerInput.trim()) return; // Don't submit if the box is empty
-    
+
     const pairingRef = doc(db, "pairings", pairingId);
     await updateDoc(pairingRef, {
       [`qaSession.answers.${userId}`]: myAnswerInput.trim(),
@@ -99,26 +111,28 @@ export default function QAScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
+      <BackButton title="Back to pet" onPress={returnToPet} />
       <Text style={styles.title}>Q&A</Text>
-      
+
       <Text style={styles.questionText}>{qaSession.question}</Text>
 
       {!hasAnswered ? (
         <View style={styles.contentBlock}>
-          <TextInput
-            style={styles.input}
+          <InputText
             placeholder="Type your answer..."
             value={myAnswerInput}
             onChangeText={setMyAnswerInput}
             multiline
           />
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmitAnswer}>
-            <Text style={styles.submitBtnText}>Submit</Text>
-          </TouchableOpacity>
+          <PrimaryButton
+            title="Submit"
+            color="#0e8f66"
+            onPress={handleSubmitAnswer}
+            style={styles.submitButton}
+          />
         </View>
       ) : (
         <View style={styles.contentBlock}>
-          
           <View style={styles.answerRow}>
             <Text style={styles.avatarIcon}>👤</Text>
             <Text style={styles.answerText}>{myAnswer}</Text>
@@ -136,15 +150,13 @@ export default function QAScreen({ route, navigation }) {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={[styles.expBtn, (!bothAnswered || completing) && styles.expBtnDisabled]}
+          <PrimaryButton
+            title={completing ? "Completing..." : "Complete Task"}
+            color="#0e8f66"
             disabled={!bothAnswered || completing}
             onPress={handleCompleteTask}
-          >
-            <Text style={styles.expBtnText}>
-              {completing ? "Completing..." : "Complete Task"}
-            </Text>
-          </TouchableOpacity>
+            style={styles.completeButton}
+          />
         </View>
       )}
     </View>
@@ -152,15 +164,18 @@ export default function QAScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    gap: 20,
+    padding: 24,
+    backgroundColor: "#f2f2f2",
+    paddingVertical: 40,
+  },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  container: {
-    flex: 1,
     padding: 24,
-    backgroundColor: "#f2f2f2",
   },
   title: {
     fontSize: 32,
@@ -172,36 +187,17 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 20,
     fontWeight: "500",
-    marginBottom: 30,
     lineHeight: 28,
     color: "#222",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#333",
     paddingBottom: 15,
   },
   contentBlock: {
     flex: 1,
   },
-  input: {
-    borderWidth: 2,
-    borderColor: "#333",
-    borderRadius: 4,
-    padding: 15,
-    fontSize: 16,
-    minHeight: 60,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-  },
-  submitBtn: {
-    backgroundColor: "#0e8f66",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  submitBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  submitButton: {
+    width: "100%",
   },
   answerRow: {
     flexDirection: "row",
@@ -226,20 +222,9 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     fontWeight: "400",
   },
-  expBtn: {
-    backgroundColor: "#0e8f66",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: "auto", 
-    marginBottom: 40, 
-  },
-  expBtnDisabled: {
-    backgroundColor: "#aaa",
-  },
-  expBtnText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+  completeButton: {
+    width: "100%",
+    marginTop: "auto",
+    marginBottom: 40,
   },
 });

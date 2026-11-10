@@ -10,6 +10,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import PrimaryButton from "../components/PrimaryButton";
+import SecondaryButton from "../components/SecondaryButton";
+import InputText from "../components/InputText";
 
 export default function SignUpScreen() {
   // state variables to track email and password inputs.
@@ -45,36 +48,29 @@ export default function SignUpScreen() {
       <Text style={styles.header}>Sign Up</Text>
 
       {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address" // optimizes keyboard for email entry (@ symbol)
+      <InputText
+        label="Email"
+        placeholder="example@gmail.com..."
+        secure={false}
         value={email}
-        onChangeText={setEmail} // updates state on every keystroke
-        autoCapitalize="none" // important! Prevents auto-capitalizing the first letter of emails
+        onChangeText={setEmail}
       />
 
       {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry={true} // hides text for security (dots/asterisks)
+      <InputText
+        label="Password"
+        placeholder="password..."
+        secure={true}
         value={password}
         onChangeText={setPassword}
       />
 
-      {/* Action Buttons -> TO BE CHANGED TO TOUCHABLE OPACITY*/}
-      <View style={styles.buttonContainer}>
-        <Button title="Sign Up" onPress={handleSignUp} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Sign in instead"
-          color="#333"
-          onPress={() => navigation.navigate("SignIn")}
-        />
-      </View>
+      <PrimaryButton title="Sign Up" onPress={handleSignUp} />
+      <SecondaryButton
+        text="Already have an account?"
+        link="Sign in."
+        onPress={() => navigation.navigate("SignIn")}
+      />
     </View>
   );
 }
@@ -85,25 +81,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 16,
+    padding: 20,
+    paddingVertical: 40,
     backgroundColor: "#f2f2f2",
   },
   header: {
     fontSize: 24,
     marginBottom: 24,
     textAlign: "center",
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: "white",
-  },
-  buttonContainer: {
-    padding: 20,
+    fontWeight: "bold",
   },
   footer: {
     marginTop: 20,

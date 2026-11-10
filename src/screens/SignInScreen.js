@@ -10,6 +10,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import PrimaryButton from "../components/PrimaryButton";
+import SecondaryButton from "../components/SecondaryButton";
+import InputText from "../components/InputText";
 
 export default function SignInScreen() {
   // state variables to track email and password inputs.
@@ -41,36 +44,30 @@ export default function SignInScreen() {
       <Text style={styles.header}>Welcome Back!</Text>
 
       {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address" // optimizes keyboard for email entry (@ symbol)
+      <InputText
+        label="Email"
+        placeholder="example@gmail.com..."
+        secure={false}
         value={email}
-        onChangeText={setEmail} // updates state on every keystroke
-        autoCapitalize="none" // important! Prevents auto-capitalizing the first letter of emails
+        onChangeText={setEmail}
       />
 
       {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry={true} // hides text for security (dots/asterisks)
+      <InputText
+        label="Password"
+        placeholder="password..."
+        secure={true}
         value={password}
         onChangeText={setPassword}
       />
 
       {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <Button title="Sign In" onPress={handleSignIn} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Sign up instead"
-          color="#333"
-          onPress={() => navigation.navigate("SignUp")}
-        />
-      </View>
+      <PrimaryButton title="Sign In" onPress={handleSignIn} />
+      <SecondaryButton
+        text="Don't have an account yet?"
+        link="Sign up now."
+        onPress={() => navigation.navigate("SignUp")}
+      />
     </View>
   );
 }
@@ -79,25 +76,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 16,
+    padding: 20,
+    paddingVertical: 40,
     backgroundColor: "#f2f2f2",
   },
   header: {
     fontSize: 24,
     marginBottom: 24,
     textAlign: "center",
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: "white",
-  },
-  buttonContainer: {
-    padding: 20,
+    fontWeight: "bold",
   },
   footer: {
     marginTop: 20,
