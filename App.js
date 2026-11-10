@@ -11,7 +11,8 @@ import SignUpScreen from "./src/screens/SignUpScreen";
 import PairingScreen from "./src/screens/PairingScreen";
 import HomePetScreen from "./src/screens/HomePetScreen";
 import CameraTaskScreen from "./src/screens/CameraTaskScreen";
-import QAScreen from './src/screens/QAScreen';
+import QAScreen from "./src/screens/QAScreen";
+import LandingScreen from "./src/screens/LandingScreen";
 
 export default function App() {
   //////////////////////// FUNCTIONS ////////////////////////
@@ -28,7 +29,7 @@ export default function App() {
       //   {/* testing for this branch, original commented below*/}
       // </ProtectedStack.Navigator>
 
-      <ProtectedStack.Navigator>
+      <ProtectedStack.Navigator screenOptions={{ headerShown: false }}>
         <ProtectedStack.Screen name="PairingScreen" component={PairingScreen} />
         <ProtectedStack.Screen name="HomePetScreen" component={HomePetScreen} />
         <ProtectedStack.Screen
@@ -36,10 +37,11 @@ export default function App() {
           component={CameraTaskScreen}
           options={{ title: "Camera Task" }}
         />
-        <ProtectedStack.Screen 
-          name="QAScreen" 
-          component={QAScreen} 
-          options={{ title: "Partner Q&A" }} />
+        <ProtectedStack.Screen
+          name="QAScreen"
+          component={QAScreen}
+          options={{ title: "Partner Q&A" }}
+        />
       </ProtectedStack.Navigator>
     );
   }
@@ -62,7 +64,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="SignUp"
+        initialRouteName="Landing"
         screenOptions={{ headerShown: false }}
       >
         {user ? (
@@ -75,6 +77,7 @@ export default function App() {
         ) : (
           // if user is not logged in, show the auth screens
           <>
+            <Stack.Screen name="Landing" component={LandingScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
           </>

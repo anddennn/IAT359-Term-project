@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, FlatList, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
   doc,
@@ -8,6 +8,10 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
+
+import PrimaryButton from "./PrimaryButton";
+import ProgressBar from "./ProgressBar";
+import ActivityListItem from "./ActivityListItem";
 
 const MAX_HEALTH_SECONDS = 60;
 const ACTIVITY_NAMES = ["Q&A", "Camera", "Voice Notes", "Play"];
@@ -160,8 +164,9 @@ export default function SharedPetView({ showPartnerId = false }) {
   };
 
   // Activity functions:
-  // handleRefreshActivities resets the task list
-  // handleCompleteActivities marks activities as completed
+  // - handleRefreshActivities resets the task list
+  // - handleCompleteActivities marks activities as completed
+  // - handleTaskPress identifies which task is pressed and navigates as such
 
   const handleRefreshActivities = () => {
     updatePet((pet) => ({ ...pet, activities: createActivities() })).catch(
@@ -185,24 +190,22 @@ export default function SharedPetView({ showPartnerId = false }) {
         ),
       };
     });
-    // .then((updated) => {
-    //   if (updated && key === "Camera") {
-    //     navigation.navigate("CameraTaskScreen");
-    //   }
-    // })
-    // .catch(handleUpdateError);
   };
 
   const handleTaskPress = (key) => {
     if (key === "Q&A") {
       navigation.navigate("QAScreen", {
-        pairingId: pairingId,
-        userId: userId,
+        pairingId,
+        userId,
         partnerId: account?.pairedWith,
-        onComplete: () => handleCompleteActivity(key), // Pass the function here!
+        onComplete: () => handleCompleteActivity(key),
+      });
+    } else if (key === "Camera") {
+      navigation.navigate("CameraTaskScreen", {
+        onComplete: () => handleCompleteActivity(key),
       });
     } else {
-      handleCompleteActivity(key);
+      handleCompleteActivity(key).catch(handleUpdateError);
     }
   };
 
@@ -221,8 +224,6 @@ export default function SharedPetView({ showPartnerId = false }) {
     (pet?.health ?? MAX_HEALTH_SECONDS) - elapsedSeconds,
     0,
   ); // decreases by the second
-  const expBarWidth = `${Math.min(Math.max((pet?.exp ?? 0) / 100, 0), 1) * 100}%`; // percentage value for exp
-  const healthBarWidth = `${(health / MAX_HEALTH_SECONDS) * 100}%`; // percentage value for health
 
   const incompleteActivities =
     pet?.activities.filter((activity) => !activity.completed) ?? [];
@@ -247,31 +248,19 @@ export default function SharedPetView({ showPartnerId = false }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>{title}</Text>
+      <Text style={styles.header}>userID: {title}</Text>
       {message ? (
         <Text>{message}</Text>
       ) : (
         <>
           <View style={styles.barContainer}>
-            <Text>Exp</Text>
-            <View style={styles.progressBar}>
-              <View style={styles.progressBarTrack}>
-                <View
-                  style={[styles.progressBarFill, { width: expBarWidth }]}
-                />
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.barContainer}>
-            <Text>Health</Text>
-            <View style={styles.progressBar}>
-              <View style={styles.progressBarTrack}>
-                <View
-                  style={[styles.progressBarFill, { width: healthBarWidth }]}
-                />
-              </View>
-            </View>
+            <ProgressBar label="Exp" value={pet?.exp ?? 0} max={100} />
+            <ProgressBar
+              label="Hp"
+              value={health}
+              max={MAX_HEALTH_SECONDS}
+              color="#0e8f66"
+            />
           </View>
 
           <View
@@ -281,47 +270,33 @@ export default function SharedPetView({ showPartnerId = false }) {
               health < MAX_HEALTH_SECONDS * 0.33 && styles.placeholderSad,
             ]}
           />
-          <Button
+          <PrimaryButton
             title="Refresh activities (debug)"
-            color="#122666"
             onPress={handleRefreshActivities}
+            color="#000"
           />
+
           <FlatList
             style={styles.list}
             data={incompleteActivities}
             keyExtractor={(activity) => activity.key}
-            renderItem={({ item }) => (
-              <View style={styles.listItem}>
-                <Text style={styles.listItemText}>{item.value}</Text>
-                {item.key === "Camera" ? (
-                  <View style={styles.buttonContainer}>
-                    <Button
-                      title="Go to task"
-                      onPress={() =>
-                        navigation.navigate("CameraTaskScreen", {
-                          onComplete: () => handleCompleteActivity("Camera"),
-                        })
-                      }
-                    />
-                  </View>
-                ) : item.key === "Q&A" ? (
-                  <View style={styles.buttonContainer}>
-                    <Button
-                      title="Go to task"
-                      onPress={() => handleTaskPress(item.key)}
-                    />
-                  </View>                  
-                ) : (
-                  <Button
-                    title="Complete"
-                    color="#0e8f66"
-                    onPress={() =>
-                      handleCompleteActivity(item.key).catch(handleUpdateError)
-                    }
-                  />
-                )}
-              </View>
-            )}
+            renderItem={({ item }) => {
+              const isNavigable = item.key === "Camera" || item.key === "Q&A";
+              return (
+                <ActivityListItem
+                  label={item.value}
+                  actionLabel={isNavigable ? "Go to task" : "Complete"}
+                  actionColor={isNavigable ? undefined : "#0e8f66"}
+                  onAction={() =>
+                    isNavigable
+                      ? handleTaskPress(item.key)
+                      : handleCompleteActivity(item.key).catch(
+                          handleUpdateError,
+                        )
+                  }
+                />
+              );
+            }}
           />
         </>
       )}
@@ -332,33 +307,25 @@ export default function SharedPetView({ showPartnerId = false }) {
 /////////////////////// STYLES //////////////////////////////////////
 
 const styles = StyleSheet.create({
-  barContainer: {
-    flexDirection: "row",
+  container: {
+    flex: 1,
+    gap: 20,
+    justifyContent: "flex-start",
     alignItems: "center",
-    gap: 10,
+    padding: 20,
+    paddingVertical: 40,
+    backgroundColor: "#f2f2f2",
   },
-  progressBar: {
-    width: "80%",
-    borderRadius: 16,
-    justifyContent: "center",
-    paddingHorizontal: 8,
+  barContainer: {
+    flexDirection: "column",
+    gap: 2,
   },
-  progressBarTrack: {
-    height: 8,
-    width: "100%",
-    borderRadius: 16,
-    backgroundColor: "#e0e0df",
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 16,
-    backgroundColor: "#3b5998",
-  },
+  ///PET PLACEHOLDER TO BE REPLACED WITH IMAGES
   placeholderHappy: {
     width: 100,
     height: 100,
     borderRadius: 50,
+    margin: 20,
     backgroundColor: "#33ff00",
   },
   placeholderNeutral: {
@@ -367,40 +334,15 @@ const styles = StyleSheet.create({
   placeholderSad: {
     backgroundColor: "#790000",
   },
+  // ----------------------------------------
   list: {
-    maxHeight: "40%",
+    maxHeight: "auto",
     width: "100%",
     paddingHorizontal: 10,
     marginBottom: 10,
   },
-  listItem: {
-    backgroundColor: "#dfe2eb",
-    borderWidth: 1,
-    borderColor: "#a9aec2",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  listItemText: {
-    fontSize: 16,
-    color: "#484e63",
-    margin: 10,
-    flexWrap: "wrap",
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    gap: 20,
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#f2f2f2",
-  },
   header: {
-    fontSize: 24,
+    fontSize: 16,
     textAlign: "center",
   },
 });

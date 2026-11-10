@@ -1,10 +1,19 @@
 import { useState, useRef } from "react";
-import { Alert, StyleSheet, Text, View, Button, Image } from "react-native";
+import { Alert, StyleSheet, Text, View, Image } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
+import BackButton from "../components/BackButton";
+import PrimaryButton from "../components/PrimaryButton";
 
 export default function CameraTaskScreen({ navigation, route }) {
   const { onComplete } = route.params;
+  const returnToPet = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("HomePetScreen");
+    }
+  };
 
   const [permission, requestPermission] = useCameraPermissions();
   const [image, setImage] = useState(null);
@@ -71,6 +80,7 @@ export default function CameraTaskScreen({ navigation, route }) {
   if (!permission) {
     return (
       <View style={styles.container}>
+        <BackButton title="Back to pet" onPress={returnToPet} />
         <Text>Checking camera permission...</Text>
       </View>
     );
@@ -79,14 +89,19 @@ export default function CameraTaskScreen({ navigation, route }) {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
+        <BackButton title="Back to pet" onPress={returnToPet} />
         <Text>No camera access</Text>
-        <Button title="Allow camera access" onPress={requestPermission} />
+        <PrimaryButton
+          title="Allow camera access"
+          onPress={requestPermission}
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      <BackButton title="Back to pet" onPress={returnToPet} />
       <Text style={styles.header}>Camera</Text>
       {!image ? (
         <CameraView
@@ -97,25 +112,21 @@ export default function CameraTaskScreen({ navigation, route }) {
           onCameraReady={() => setCameraReady(true)}
         >
           <View style={styles.actionButtons}>
-            <View style={styles.buttonContainer}>
-              <Button
-                title={"Flip Cam"}
-                color={"#333"}
-                onPress={() => {
-                  setCameraReady(false);
-                  setCamType(camType === "back" ? "front" : "back");
-                }}
-              />
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button
-                title={"Flash"}
-                color={flash === "off" ? "gray" : "red"}
-                onPress={() => {
-                  setFlash(flash === "off" ? "on" : "off");
-                }}
-              />
-            </View>
+            <PrimaryButton
+              title="Flip Cam"
+              color="#333"
+              onPress={() => {
+                setCameraReady(false);
+                setCamType(camType === "back" ? "front" : "back");
+              }}
+            />
+            <PrimaryButton
+              title="Flash"
+              color={flash === "off" ? "gray" : "red"}
+              onPress={() => {
+                setFlash(flash === "off" ? "on" : "off");
+              }}
+            />
           </View>
         </CameraView>
       ) : (
@@ -124,36 +135,30 @@ export default function CameraTaskScreen({ navigation, route }) {
       <View>
         {image ? (
           <View>
-            <View style={styles.buttonContainer}>
-              <Button
-                title={completing ? "Completing..." : "Complete Task"}
-                onPress={handleCompleteTask}
-                disabled={completing}
-              />
-            </View>
             <View style={styles.actionButtons}>
-              <View style={styles.buttonContainer}>
-                <Button
-                  title={"Retake picture"}
-                  onPress={() => {
-                    setCameraReady(false);
-                    setImage(null);
-                  }}
-                />
-              </View>
-              <View style={styles.buttonContainer}>
-                <Button title={"Save"} onPress={saveImage} />
-              </View>
+              <PrimaryButton
+                title="Retake picture"
+                onPress={() => {
+                  setCameraReady(false);
+                  setImage(null);
+                }}
+                width="45%"
+              />
+              <PrimaryButton title="Save" onPress={saveImage} width="45%" />
             </View>
-          </View>
-        ) : (
-          <View style={styles.buttonContainer}>
-            <Button
-              title="Take a picture"
-              onPress={takePicture}
-              disabled={!cameraReady}
+            <PrimaryButton
+              title={completing ? "Completing..." : "Complete Task"}
+              onPress={handleCompleteTask}
+              disabled={completing}
+              color="#0e8f66"
             />
           </View>
+        ) : (
+          <PrimaryButton
+            title="Take a picture"
+            onPress={takePicture}
+            disabled={!cameraReady}
+          />
         )}
       </View>
     </View>
@@ -163,27 +168,27 @@ export default function CameraTaskScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignContent: "flex-start",
-    padding: 16,
+    gap: 20,
+    justifyContent: "flex-start",
+    alignContent: "center",
+    padding: 20,
+    paddingVertical: 40,
     backgroundColor: "#f2f2f2",
   },
   header: {
     fontSize: 24,
-    marginBottom: 24,
     textAlign: "center",
   },
   camera: {
     flex: 1,
     maxHeight: "70%",
     borderRadius: 20,
+    padding: 10,
   },
   actionButtons: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 50,
-  },
-  buttonContainer: {
-    padding: 20,
+    gap: 10,
   },
 });
