@@ -9,6 +9,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
+import { signOut } from "firebase/auth";
 
 import PrimaryButton from "./PrimaryButton";
 import ProgressBar from "./ProgressBar";
@@ -281,6 +282,15 @@ export default function SharedPetView({
               : null;
   ////////////////////////////////////////////////////////
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log("User logged out successfully!");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   ////////////////////////// RENDERING VIEW ///////////////////////
 
   return (
@@ -346,6 +356,7 @@ export default function SharedPetView({
           </View>
         </>
       )}
+      <PrimaryButton title="Sign out" color="Red" onPress={handleLogout} />
     </View>
   );
 }
