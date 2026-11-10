@@ -13,7 +13,6 @@ import { auth, db } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { createAsyncStorage } from "@react-native-async-storage/async-storage";
 
 export default function PairingScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
