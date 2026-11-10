@@ -6,6 +6,7 @@ import {
   onSnapshot,
   runTransaction,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
@@ -28,10 +29,14 @@ const createActivities = () =>
 const createPet = () => ({
   exp: 0,
   health: MAX_HEALTH_SECONDS,
-  activities: createActivities(),
 });
 
-export default function SharedPetView({ showPartnerId = false }) {
+export default function SharedPetView({
+  //props are used to differentiate between home and pet view
+  showPartnerId = false,
+  showPartnerActivities = false,
+  readOnly = false,
+}) {
   const navigation = useNavigation();
 
   // User stuff
@@ -40,6 +45,8 @@ export default function SharedPetView({ showPartnerId = false }) {
   const [accountLoading, setAccountLoading] = useState(true);
   const [accountError, setAccountError] = useState(false);
 
+  const [activities, setActivities] = useState([]); // will hold activity list
+
   // Pet stuff
   const [petSnapshot, setPetSnapshot] = useState(null);
   const [petError, setPetError] = useState(false);
@@ -47,7 +54,7 @@ export default function SharedPetView({ showPartnerId = false }) {
   // For timer
   const [now, setNow] = useState(0);
 
-  // Account listener to handle loading and errors
+  // Account listener to store account data and reads pairingID
   useEffect(() => {
     if (!userId) {
       return;
@@ -68,8 +75,32 @@ export default function SharedPetView({ showPartnerId = false }) {
     );
   }, [userId]);
 
+  const activityUserId = showPartnerActivities ? account?.pairedWith : userId;
+  // Account listener to store/make individual user activities
+  useEffect(() => {
+    if (!activityUserId) return;
+
+    const userRef = doc(db, "users", activityUserId);
+
+    return onSnapshot(userRef, (userSnapshot) => {
+      if (!userSnapshot.exists()) return;
+
+      const userData = userSnapshot.data();
+
+      // If activities don't exist yet, initialize them
+      if (!userData.activities) {
+        updateDoc(userRef, {
+          activities: createActivities(),
+        });
+      } else {
+        setActivities(userData.activities);
+      }
+    });
+  }, [activityUserId]);
+
   const pairingId = account?.pairingId ?? null;
 
+  // Pairing listener that watches 'pairings' document and stores shared pet state.
   useEffect(() => {
     if (!pairingId) return;
 
@@ -121,6 +152,7 @@ export default function SharedPetView({ showPartnerId = false }) {
     );
   }, [pairingId]);
 
+  // Timer Listener
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 5000);
     return () => clearInterval(timer);
@@ -169,26 +201,31 @@ export default function SharedPetView({ showPartnerId = false }) {
   // - handleTaskPress identifies which task is pressed and navigates as such
 
   const handleRefreshActivities = () => {
-    updatePet((pet) => ({ ...pet, activities: createActivities() })).catch(
+    const userRef = doc(db, "users", userId);
+    updateDoc(userRef, { activities: createActivities() }).catch(
       handleUpdateError,
     );
   };
 
-  const handleCompleteActivity = (key) => {
-    return updatePet((pet) => {
-      const activity = pet.activities.find((item) => item.key === key);
-      if (!activity || activity.completed) {
-        return null;
-      }
+  const handleCompleteActivity = async (key) => {
+    const activity = pet.activities.find((item) => item.key === key);
 
-      return {
-        ...pet,
-        exp: pet.exp + 10,
-        health: Math.min(pet.health + 15, MAX_HEALTH_SECONDS),
-        activities: pet.activities.map((item) =>
-          item.key === key ? { ...item, completed: true } : item,
-        ),
-      };
+    if (!activity || activity.completed) return;
+
+    // Update shared pet exp and health
+    await updatePet((pet) => ({
+      ...pet,
+      exp: pet.exp + 10,
+      health: Math.min(pet.health + 15, MAX_HEALTH_SECONDS),
+    }));
+
+    // Update ONLY CURRENT USER activities
+    const userRef = doc(db, "users", userId);
+
+    await updateDoc(userRef, {
+      activities: activities.map((item) =>
+        item.key === key ? { ...item, completed: true } : item,
+      ),
     });
   };
 
@@ -225,9 +262,9 @@ export default function SharedPetView({ showPartnerId = false }) {
     0,
   ); // decreases by the second
 
-  const incompleteActivities =
-    pet?.activities.filter((activity) => !activity.completed) ?? [];
-
+  const incompleteActivities = activities.filter(
+    (activity) => !activity.completed,
+  );
   //Loading and error messages///////////////////////
   const message = !userId
     ? "User is unavailable."
@@ -270,34 +307,43 @@ export default function SharedPetView({ showPartnerId = false }) {
               health < MAX_HEALTH_SECONDS * 0.33 && styles.placeholderSad,
             ]}
           />
-          <PrimaryButton
-            title="Refresh activities (debug)"
-            onPress={handleRefreshActivities}
-            color="#000"
-          />
 
-          <FlatList
-            style={styles.list}
-            data={incompleteActivities}
-            keyExtractor={(activity) => activity.key}
-            renderItem={({ item }) => {
-              const isNavigable = item.key === "Camera" || item.key === "Q&A";
-              return (
-                <ActivityListItem
-                  label={item.value}
-                  actionLabel={isNavigable ? "Go to task" : "Complete"}
-                  actionColor={isNavigable ? undefined : "#0e8f66"}
-                  onAction={() =>
-                    isNavigable
-                      ? handleTaskPress(item.key)
-                      : handleCompleteActivity(item.key).catch(
-                          handleUpdateError,
-                        )
-                  }
-                />
-              );
-            }}
-          />
+          {/* Only accessible on your own home pet screen */}
+          {!readOnly && (
+            <PrimaryButton
+              title="Refresh activities (debug)"
+              onPress={handleRefreshActivities}
+              color="#000"
+            />
+          )}
+
+          <View style={styles.activityContainer}>
+            <Text style={[{ fontWeight: "bold" }]}>Activity List:</Text>
+            <FlatList
+              style={styles.list}
+              data={incompleteActivities}
+              keyExtractor={(activity) => activity.key}
+              renderItem={({ item }) => {
+                const isNavigable = item.key === "Camera" || item.key === "Q&A";
+                return (
+                  <ActivityListItem
+                    label={item.value}
+                    readOnly={readOnly}
+                    itemColor={readOnly ? "#d6e2fd" : "#FFFFFF"}
+                    actionLabel={isNavigable ? "Go to task" : "Complete"}
+                    actionColor={isNavigable ? undefined : "#0e8f66"}
+                    onAction={() =>
+                      isNavigable
+                        ? handleTaskPress(item.key)
+                        : handleCompleteActivity(item.key).catch(
+                            handleUpdateError,
+                          )
+                    }
+                  />
+                );
+              }}
+            />
+          </View>
         </>
       )}
     </View>
@@ -312,9 +358,6 @@ const styles = StyleSheet.create({
     gap: 20,
     justifyContent: "flex-start",
     alignItems: "center",
-    padding: 20,
-    paddingVertical: 40,
-    backgroundColor: "#f2f2f2",
   },
   barContainer: {
     flexDirection: "column",
@@ -335,11 +378,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#790000",
   },
   // ----------------------------------------
+
+  activityContainer: {
+    width: "100%",
+    flexDirection: "column",
+    gap: 4,
+    alignContent: "flex-start",
+  },
+
   list: {
     maxHeight: "auto",
     width: "100%",
-    paddingHorizontal: 10,
-    marginBottom: 10,
   },
   header: {
     fontSize: 16,

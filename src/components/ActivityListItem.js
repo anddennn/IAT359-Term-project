@@ -6,22 +6,25 @@ export default function ActivityListItem({
   actionLabel,
   onAction,
   actionColor,
+  readOnly = false,
+  itemColor = "#FFF",
 }) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: itemColor }]}>
       <Text style={styles.label}>{label}</Text>
-      <PrimaryButton
-        title={actionLabel}
-        color={actionColor}
-        onPress={onAction}
-      />
+      {!readOnly && (
+        <PrimaryButton
+          title={actionLabel}
+          color={actionColor}
+          onPress={onAction}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#a9aec2",
     padding: 10,
