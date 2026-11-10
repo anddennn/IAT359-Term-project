@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, Text, View, ActivityIndicator, Alert } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
@@ -118,33 +118,6 @@ export default function LocationScreen() {
         // 4. Fetch local weather and sync current location to Firestore
         fetchWeather(myCoords.latitude, myCoords.longitude).then(setMyWeather);
         updateDoc(userRef, { location: myCoords }).catch(console.error);
-
-        // const weather = await fetchWeather(myCoords.latitude, myCoords.longitude);
-        // setMyWeather(weather);
-        // await updateDoc(userRef, { location: myCoords });
-
-        // 5. Establish real-time listener for partner's location updates <--- Listener moved to top
-
-        // const partnerRef = doc(db, "users", partnerId);  <--- Moved partner location updates to bottom in separate useEffect
-        // unsubscribePartner = onSnapshot(partnerRef, async (docSnap) => {
-        //   if (docSnap.exists() && docSnap.data().location) {
-        //     const partnerCoords = docSnap.data().location;
-        //     setPartnerLocation(partnerCoords);
-
-        //     // Fetch weather for partner's coordinates
-        //     const pWeather = await fetchWeather(partnerCoords.latitude, partnerCoords.longitude);
-        //     setPartnerWeather(pWeather);
-
-        //     // Recalculate distance whenever partner moves
-        //     const calculatedDist = calculateDistance(
-        //       myCoords.latitude,
-        //       myCoords.longitude,
-        //       partnerCoords.latitude,
-        //       partnerCoords.longitude
-        //     );
-        //     setDistance(calculatedDist);
-        //   }
-        // });
       } catch (error) {
         console.error("Initialization error:", error);
         Alert.alert("Error", "Could not load location data.");
@@ -173,6 +146,17 @@ export default function LocationScreen() {
           partnerLocation.longitude,
         ),
       );
+    }
+  }, [myLocation, partnerLocation]);
+
+  //Framing markers to fit both locations on map
+  const mapRef = useRef();
+  useEffect(() => {
+    if (mapRef.current && myLocation && partnerLocation) {
+      mapRef.current.fitToCoordinates([myLocation, partnerLocation], {
+        edgePadding: { top: 350, right: 100, bottom: 100, left: 100 },
+        animated: true,
+      });
     }
   }, [myLocation, partnerLocation]);
 
@@ -236,6 +220,7 @@ export default function LocationScreen() {
 
       {/* Interactive Map Component */}
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: myLocation.latitude,
