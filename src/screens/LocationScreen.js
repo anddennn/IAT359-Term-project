@@ -37,7 +37,6 @@ const fetchWeather = async (latitude, longitude) => {
   try {
     const response = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=weather_code,temperature_2m`
-      //`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`
     );
     const data = await response.json();
     return data.current;
