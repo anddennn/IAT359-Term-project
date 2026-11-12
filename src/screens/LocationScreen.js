@@ -36,10 +36,11 @@ const getWeatherCondition = (code) => {
 const fetchWeather = async (latitude, longitude) => {
   try {
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`,
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=weather_code,temperature_2m`
+      //`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`
     );
     const data = await response.json();
-    return data.current_weather;
+    return data.current;
   } catch (error) {
     console.error("Failed to fetch weather:", error);
     return null;
@@ -187,10 +188,10 @@ export default function LocationScreen() {
           <View style={styles.weatherBlock}>
             <Text style={styles.label}>Your Weather</Text>
             <Text style={styles.condition}>
-              {myWeather ? getWeatherCondition(myWeather.weathercode) : "--"}
+              {myWeather ? getWeatherCondition(myWeather.weather_code) : "--"}
             </Text>
             <Text style={styles.temperature}>
-              {myWeather ? `${myWeather.temperature}°F` : "--"}
+              {myWeather ? `${myWeather.temperature_2m}°C` : "--"}
             </Text>
           </View>
 
@@ -201,11 +202,11 @@ export default function LocationScreen() {
             <Text style={styles.label}>Partner's Weather</Text>
             <Text style={styles.condition}>
               {partnerWeather
-                ? getWeatherCondition(partnerWeather.weathercode)
+                ? getWeatherCondition(partnerWeather.weather_code)
                 : "--"}
             </Text>
             <Text style={styles.temperature}>
-              {partnerWeather ? `${partnerWeather.temperature}°F` : "--"}
+              {partnerWeather ? `${partnerWeather.temperature_2m}°C` : "--"}
             </Text>
           </View>
         </View>
@@ -234,7 +235,7 @@ export default function LocationScreen() {
           coordinate={myLocation}
           title="You"
           description={
-            myWeather ? `${myWeather.temperature}°F` : "Your location"
+            myWeather ? `${myWeather.temperature_2m}°C` : "Your location"
           }
           pinColor="red"
         />
@@ -246,7 +247,7 @@ export default function LocationScreen() {
             title="Partner"
             description={
               partnerWeather
-                ? `${partnerWeather.temperature}°F`
+                ? `${partnerWeather.temperature_2m}°C`
                 : "Partner's location"
             }
             pinColor="blue"
